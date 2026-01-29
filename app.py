@@ -16,6 +16,39 @@ st.set_page_config(
 # ------------------- CUSTOM CSS -------------------
 st.markdown("""
 <style>
+    /* Hide ALL Streamlit branding elements completely */
+    #MainMenu {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
+    .stDeployButton {display: none !important;}
+    header {visibility: hidden !important;}
+
+    /* Specifically target and hide the "Manage Apps" button */
+    [data-testid="collapsedControl"] {display: none !important;}
+    [data-testid="stMainMenu"] {display: none !important;}
+    [data-testid="stSidebarNav"] {display: none !important;}
+
+    /* Hide the hamburger menu and manage app button container */
+    .stApp > header {display: none !important;}
+    div[data-testid="stDecoration"] {display: none !important;}
+    div[data-testid="stStatusWidget"] {display: none !important;}
+
+    /* Additional selectors to ensure everything is hidden */
+    [data-testid="stToolbar"], 
+    [data-testid="stToolbarActions"] {display: none !important;}
+
+    /* Hide any other Streamlit interface elements */
+    iframe[title="Manage app"] {display: none !important;}
+    iframe[title="Report a bug"] {display: none !important;}
+
+    /* Force hide any remaining elements */
+    button[title="Manage app"] {display: none !important;}
+    button[aria-label="Manage app"] {display: none !important;}
+
+    /* Clear any remaining Streamlit padding/margins */
+    .stApp > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(2) > div {display: none !important;}
+    .stApp > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(1) > div {display: none !important;}
+    
+    /* Professional styling */
     .main-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         padding: 2rem;
@@ -55,11 +88,6 @@ st.markdown("""
     .stSidebar .sidebar-content {
         background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
     }
-    /* Hide Streamlit elements */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    .stDeployButton {display:none;}
-    header {visibility: hidden;}
     
     /* Professional styling */
     .section-header {
@@ -751,13 +779,11 @@ if st.session_state.uploaded_files:
 else:
     st.info("📤 Upload answer sheet images and add them to the processing queue to begin")
 
-# ------------------- FOOTER -------------------
+# ------------------- COPYRIGHT FOOTER -------------------
 st.markdown("---")
 st.markdown("""
-<div style='text-align: center; color: #444; padding: 1.5rem; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%); border-radius: 10px;'>
-    <p style='margin: 0; font-size: 1rem; font-weight: 600;'>📚 <strong>Little Flower Junior College</strong> | Paper Processing System</p>
-    <p style='margin: 0.5rem 0 0 0; font-size: 0.9rem;'>Uppal, Hyderabad - 39 | Academic Year 2023-24</p>
-    <p style='margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;'>Professional Document Processing Solution</p>
+<div style='text-align: center; color: #666; padding: 1.5rem; font-size: 0.9rem;'>
+    © Copyright 2024 Little Flower Junior College (LFJC). All rights reserved.
 </div>
 """, unsafe_allow_html=True)
 
@@ -772,4 +798,4 @@ st.components.v1.html("""
         }
     });
 </script>
-""", height=0) 
+""", height=0)
