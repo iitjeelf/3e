@@ -16,156 +16,84 @@ st.set_page_config(
 # ------------------- CUSTOM CSS -------------------
 st.markdown("""
 <style>
-    /* Hide ALL Streamlit branding elements completely */
-    #MainMenu {visibility: hidden !important;}
-    footer {visibility: hidden !important;}
-    .stDeployButton {display: none !important;}
-    header {visibility: hidden !important;}
-    
-    /* Hide the "Manage Apps" button and hamburger menu */
-    .stApp > header > div > div:nth-child(2) > button,
-    .stApp > header > div > div:nth-child(1) > button {
-        display: none !important;
-    }
-    
-    /* Hide Streamlit's main menu completely */
-    div[data-testid="stSidebarNav"] {
-        display: none !important;
-    }
-    
-    /* Hide any remaining Streamlit elements */
-    .stApp > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(2) > div {
-        display: none !important;
-    }
-    
-    /* Remove Streamlit's default spacing */
-    .stApp > div > div > div > div > section {
-        padding-top: 0rem;
-    }
-    
-    /* Professional styling */
     .main-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 2.5rem;
-        border-radius: 12px;
+        padding: 2rem;
+        border-radius: 10px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
-        box-shadow: 0 8px 32px rgba(30, 60, 114, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        position: relative;
-        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    
-    .main-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-        z-index: 0;
-    }
-    
-    .main-header h1 {
-        position: relative;
-        z-index: 1;
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    .main-header p {
-        position: relative;
-        z-index: 1;
-        font-size: 1.1rem;
-        opacity: 0.9;
-        margin: 0;
-    }
-    
     .stButton > button {
         width: 100%;
-        border-radius: 10px;
-        padding: 0.9rem;
+        border-radius: 8px;
+        padding: 0.75rem;
         font-weight: 600;
         transition: all 0.3s ease;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        color: white;
-        border: none;
-        font-size: 1rem;
     }
-    
     .stButton > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(30, 60, 114, 0.3);
-        background: linear-gradient(135deg, #2a5298 0%, #4a90e2 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
-    
     .ratio-box {
-        background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(233, 236, 239, 0.9) 100%);
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         padding: 1.5rem;
-        border-radius: 12px;
-        border-left: 4px solid #4a90e2;
-        margin: 1rem 0;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .selected-file {
-        background: rgba(240, 248, 255, 0.8);
-        padding: 14px;
         border-radius: 10px;
+        border-left: 5px solid #4a90e2;
+        margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .selected-file {
+        background: #f0f8ff;
+        padding: 12px;
+        border-radius: 8px;
         margin: 8px 0;
         border-left: 4px solid #4a90e2;
-        font-size: 0.95rem;
-        font-weight: 500;
-        border: 1px solid rgba(74, 144, 226, 0.1);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        font-size: 0.9rem;
     }
-    
     .stSidebar .sidebar-content {
         background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
     }
+    /* Hide Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton {display:none;}
+    header {visibility: hidden;}
     
     /* Professional styling */
     .section-header {
         font-size: 1.1rem;
-        font-weight: 700;
-        color: #1e3c72;
+        font-weight: 600;
+        color: #2c3e50;
         margin-top: 1.5rem;
-        margin-bottom: 0.8rem;
+        margin-bottom: 0.5rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #4a90e2;
-        letter-spacing: 0.5px;
     }
     
     /* Sidebar show/hide button */
     .sidebar-toggle {
         position: fixed;
-        top: 25px;
-        left: 25px;
+        top: 20px;
+        left: 20px;
         z-index: 1000;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        background: #4a90e2;
         color: white;
         border: none;
         border-radius: 50%;
-        width: 48px;
-        height: 48px;
+        width: 40px;
+        height: 40px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
     
     .sidebar-toggle:hover {
-        transform: scale(1.1) rotate(90deg);
-        box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
-        background: linear-gradient(135deg, #2a5298 0%, #4a90e2 100%);
+        background: #357ae8;
+        transform: scale(1.1);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -178,7 +106,7 @@ if 'sidebar_visible' not in st.session_state:
 if not st.session_state.sidebar_visible:
     st.markdown("""
     <div class="sidebar-toggle" onclick="document.getElementById('sidebar-toggle-script').click()">
-        ⚙️
+        ☰
     </div>
     <script>
         // Create hidden button for toggling sidebar
@@ -210,7 +138,7 @@ if not st.session_state.sidebar_visible:
 st.markdown("""
 <div class="main-header">
     <h1>🎓 LFJC PAPER PROCESSING SYSTEM</h1>
-    <p>Professional Document Processing Solution | Secure • Efficient • Reliable</p>
+    <p>Professional Answer Sheet Processing | Little Flower Junior College, Uppal</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -226,9 +154,9 @@ if st.session_state.sidebar_visible:
         # Add close button at top of sidebar
         col1, col2 = st.columns([4, 1])
         with col1:
-            st.markdown("### ⚙️ PROCESSING SETTINGS")
+            st.markdown("### ⚙️ SETTINGS PANEL")
         with col2:
-            if st.button("✕", help="Close settings panel", key="close_sidebar"):
+            if st.button("✕", help="Close sidebar", key="close_sidebar"):
                 st.session_state.sidebar_visible = False
                 st.rerun()
         
@@ -299,57 +227,39 @@ if st.session_state.sidebar_visible:
         st.markdown("---")
         
         # Quick Help
-        with st.expander("📖 QUICK HELP & FORMATS"):
+        with st.expander("📖 Quick Help"):
             st.markdown("""
             **Format Examples:**
-            
-            **Question Ranges:**  
-            `1-5, 10, 15-20`
-            
-            **Custom Numbering:**  
-            `1-5:1, 6-10:41`  
-            *(Images 1-5 start at 1, Images 6-10 start at 41)*
-            
-            **Skip Images:**  
-            `2,4-5,7`  
-            *(Skip images 2, 4, 5, and 7)*
-            
-            **Note:** All settings apply to the entire processing queue.
+            - **Question Ranges:** `1-5, 10, 15-20`
+            - **Custom Numbering:** `1-5:1, 6-10:41`  
+              (Images 1-5 start at 1, Images 6-10 start at 41)
+            - **Skip Images:** `2,4-5,7`  
+              (Skip images 2, 4, 5, and 7)
             """)
         
         st.markdown("---")
         
-        # System Status
-        with st.expander("📊 SYSTEM STATUS"):
-            st.metric("Files in Queue", len(st.session_state.uploaded_files))
-            st.metric("Batches", max([f['batch'] for f in st.session_state.uploaded_files], default=0))
-        
-        st.markdown("---")
-        
         # Add show sidebar button at bottom
-        st.markdown("*Settings panel can be reopened from the ⚙️ button*")
+        st.markdown("*Settings panel can be reopened from the ☰ button*")
 
 # Show reopen sidebar button if sidebar is hidden
 else:
     st.markdown("""
-    <div style='text-align: center; padding: 2.5rem; background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%); border-radius: 12px; margin: 2rem 0; border: 1px solid rgba(74, 144, 226, 0.1);'>
-        <h3 style='color: #1e3c72; margin-bottom: 1rem;'>⚙️ Settings Panel Hidden</h3>
-        <p style='color: #5a6a8a; font-size: 1.05rem;'>Click the ⚙️ button in the top-left corner to reopen processing settings.</p>
-        <div style='margin-top: 1.5rem; font-size: 0.9rem; color: #7b8ab8;'>
-            <i>Current Queue: <strong>{}</strong> files ready for processing</i>
-        </div>
+    <div style='text-align: center; padding: 2rem;'>
+        <h3>Settings Panel Hidden</h3>
+        <p>Click the ☰ button in the top-left corner to reopen settings.</p>
     </div>
-    """.format(len(st.session_state.uploaded_files)), unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # ------------------- MAIN AREA -------------------
-st.markdown("### 📁 DOCUMENT UPLOAD & PROCESSING")
+st.markdown("### 📁 UPLOAD ANSWER SHEETS")
 
 # File uploader with batch support
 uploaded_files = st.file_uploader(
-    "Select answer sheet images (PNG, JPG, JPEG format)",
+    "Choose answer sheet images (PNG, JPG, JPEG format)",
     type=['png', 'jpg', 'jpeg'],
     accept_multiple_files=True,
-    help="Select multiple images. Each batch processes up to 10 images automatically."
+    help="Select multiple images. Each batch processes up to 10 images."
 )
 
 # Batch management
@@ -720,7 +630,7 @@ def create_pdf(files):
 
 # ------------------- GENERATE BUTTONS -------------------
 st.markdown("---")
-st.markdown("### 🚀 PROCESSING ACTIONS")
+st.markdown("### 🚀 PROCESSING OPTIONS")
 
 if st.session_state.uploaded_files:
     col1, col2, col3 = st.columns(3)
@@ -730,7 +640,7 @@ if st.session_state.uploaded_files:
             if not exam_type or not exam_date:
                 st.error("❌ Please enter exam details in the settings panel!")
                 if not st.session_state.sidebar_visible:
-                    st.info("📝 Click the ⚙️ button in the top-left corner to open settings panel")
+                    st.info("📝 Click the ☰ button in the top-left corner to open settings panel")
             else:
                 with st.spinner(f"🔨 Processing {len(st.session_state.uploaded_files)} images into PDF..."):
                     pdf_data = create_pdf(st.session_state.uploaded_files)
@@ -750,7 +660,7 @@ if st.session_state.uploaded_files:
                                 use_container_width=True
                             )
                         with col_d2:
-                            st.metric("Estimated Pages", max(1, len(pdf_data) // 50000))
+                            st.metric("Pages", len(pdf_data) // 50000)  # Rough estimate
                     else:
                         st.error("❌ Failed to create PDF document")
     
@@ -823,7 +733,7 @@ if st.session_state.uploaded_files:
                             use_container_width=True
                         )
                     with col_z2:
-                        st.metric("Processed Images", len(processed_files))
+                        st.metric("Images", len(processed_files))
                     
                     # Cleanup
                     shutil.rmtree(temp_dir, ignore_errors=True)
@@ -832,7 +742,7 @@ if st.session_state.uploaded_files:
                     st.error(f"Archive Creation Error: {str(e)}")
     
     with col3:
-        if st.button("⚙️ **OPEN SETTINGS**", use_container_width=True, type="secondary"):
+        if st.button("⚙️ **PROCESSING SETTINGS**", use_container_width=True, type="secondary"):
             if not st.session_state.sidebar_visible:
                 st.session_state.sidebar_visible = True
                 st.rerun()
@@ -841,168 +751,13 @@ if st.session_state.uploaded_files:
 else:
     st.info("📤 Upload answer sheet images and add them to the processing queue to begin")
 
-# ------------------- MODERN GLASS-MORPHISM FOOTER -------------------
+# ------------------- FOOTER -------------------
+st.markdown("---")
 st.markdown("""
-<style>
-    .footer-container-glass {
-        position: relative;
-        margin-top: 4rem;
-        padding: 2rem;
-        background: linear-gradient(135deg, 
-            rgba(255, 255, 255, 0.95) 0%,
-            rgba(255, 255, 255, 0.9) 100%);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 
-            0 8px 32px rgba(30, 60, 114, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.6);
-        overflow: hidden;
-    }
-    
-    .footer-bg-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(45deg, 
-            transparent 0%,
-            rgba(74, 144, 226, 0.03) 25%,
-            rgba(42, 82, 152, 0.05) 50%,
-            rgba(30, 60, 114, 0.03) 75%,
-            transparent 100%);
-        z-index: 0;
-    }
-    
-    .footer-content-glass {
-        position: relative;
-        z-index: 1;
-        text-align: center;
-    }
-    
-    .copyright-gradient {
-        font-size: 1.2rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, 
-            #1e3c72 0%,
-            #2a5298 25%,
-            #4a90e2 50%,
-            #2a5298 75%,
-            #1e3c72 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 0.5rem;
-        letter-spacing: 1.5px;
-    }
-    
-    .copyright-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
-        color: white;
-        padding: 6px 20px;
-        border-radius: 30px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        margin: 0 10px 1rem 10px;
-        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .footer-divider-glass {
-        height: 1px;
-        width: 60%;
-        margin: 1.5rem auto;
-        background: linear-gradient(90deg, 
-            transparent 0%,
-            rgba(74, 144, 226, 0.3) 50%,
-            transparent 100%);
-    }
-    
-    .institution-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 24px;
-        background: rgba(255, 255, 255, 0.7);
-        border-radius: 12px;
-        border: 1px solid rgba(74, 144, 226, 0.2);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-    
-    .badge-icon {
-        color: #4a90e2;
-        font-size: 1.2rem;
-    }
-    
-    .badge-text {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #1e3c72;
-        letter-spacing: 0.5px;
-    }
-    
-    .version-tag {
-        display: inline-block;
-        background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(42, 82, 152, 0.1));
-        color: #5a6a8a;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        margin-top: 1rem;
-        border: 1px solid rgba(74, 144, 226, 0.1);
-    }
-    
-    .footer-corner-accent {
-        position: absolute;
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        background: radial-gradient(circle at center, rgba(74, 144, 226, 0.08), transparent 70%);
-    }
-    
-    .corner-1 {
-        top: -40px;
-        right: -40px;
-    }
-    
-    .corner-2 {
-        bottom: -40px;
-        left: -40px;
-        background: radial-gradient(circle at center, rgba(30, 60, 114, 0.06), transparent 70%);
-    }
-</style>
-
-<div class="footer-container-glass">
-    <div class="footer-bg-overlay"></div>
-    <div class="footer-corner-accent corner-1"></div>
-    <div class="footer-corner-accent corner-2"></div>
-    
-    <div class="footer-content-glass">
-        <div class="copyright-gradient">INTELLECTUAL PROPERTY PROTECTED</div>
-        
-        <div class="copyright-badge">
-            <span>© 2024</span>
-            <span>•</span>
-            <span>COPYRIGHT LFJC</span>
-        </div>
-        
-        <div class="footer-divider-glass"></div>
-        
-        <div class="institution-badge">
-            <div class="badge-icon">⚡</div>
-            <div class="badge-text">LFJC PAPER PROCESSING SYSTEM</div>
-            <div class="badge-icon">📊</div>
-        </div>
-        
-        <div class="version-tag">
-            Professional Edition • v2.1.0 • Secure Processing
-        </div>
-    </div>
+<div style='text-align: center; color: #444; padding: 1.5rem; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%); border-radius: 10px;'>
+    <p style='margin: 0; font-size: 1rem; font-weight: 600;'>📚 <strong>Little Flower Junior College</strong> | Paper Processing System</p>
+    <p style='margin: 0.5rem 0 0 0; font-size: 0.9rem;'>Uppal, Hyderabad - 39 | Academic Year 2023-24</p>
+    <p style='margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;'>Professional Document Processing Solution</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1017,4 +772,8 @@ st.components.v1.html("""
         }
     });
 </script>
-""", height=0)
+""", height=0) can i remove manage apps,if not hide internal,do not show at all & also remove 📚 Little Flower Junior College | Paper Processing System
+
+Uppal, Hyderabad - 39 | Academic Year 2023-24
+
+Professional Document Processing Solution. just down add copyrights reserved LFJC
