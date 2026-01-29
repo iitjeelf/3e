@@ -772,8 +772,4 @@ st.components.v1.html("""
         }
     });
 </script>
-""", height=0) can i remove manage apps,if not hide internal,do not show at all & also remove 📚 Little Flower Junior College | Paper Processing System
-
-Uppal, Hyderabad - 39 | Academic Year 2023-24
-
-Professional Document Processing Solution. just down add copyrights reserved LFJC
+""", height=0) 
