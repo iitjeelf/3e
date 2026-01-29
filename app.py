@@ -70,15 +70,6 @@ with st.sidebar:
     exam_type = st.text_input("Exam Type", "")
     exam_date = st.text_input("Exam Date (DD-MM-YYYY)", "")
     
-    st.markdown("### 📐 ALIGNMENT SETTINGS")
-    alignment = st.radio(
-        "Image Alignment",
-        ["Center", "Left"],
-        horizontal=True,
-        index=0,
-        help="Choose how images are positioned on the page"
-    )
-    
     st.markdown("### ✂️ STRIP SETTINGS")
     
     # Strip 1
@@ -283,6 +274,7 @@ def create_pdf(files):
         A4_WIDTH, A4_HEIGHT = int(8.27 * 300), int(11.69 * 300)
         TOP_MARGIN_FIRST_PAGE, TOP_MARGIN_SUBSEQUENT_PAGES = 125, 110
         BOTTOM_MARGIN = 105
+        LEFT_MARGIN, RIGHT_MARGIN = 0, 0
         GAP_BETWEEN_IMAGES = 20
         OVERLAP_PIXELS = 25
         WATERMARK_TEXT = "LFJC"
@@ -353,19 +345,9 @@ def create_pdf(files):
                 img = Image.open(io.BytesIO(file_info['bytes'])).convert('RGB')
                 img = enhance_image_opencv(img)
                 
-                # Scale image based on alignment choice
-                if alignment == "Center":
-                    # Scale to 90% of page width for centered images
-                    scale = (A4_WIDTH * 0.9) / img.width
-                else:  # Left alignment
-                    # Use smaller scale to leave space on right
-                    LEFT_MARGIN = 50
-                    scale = ((A4_WIDTH - LEFT_MARGIN) * 0.9) / img.width
-                
-                img_scaled = img.resize(
-                    (int(img.width * scale), int(img.height * scale)), 
-                    Image.Resampling.LANCZOS
-                )
+                # Scale with 70% factor
+                scale = ((A4_WIDTH - LEFT_MARGIN - RIGHT_MARGIN - 20) * 0.7) / img.width
+                img_scaled = img.resize((int(img.width * scale), int(img.height * scale)), Image.Resampling.LANCZOS)
                 img_to_process = img_scaled
                 is_first_part = True
 
@@ -377,49 +359,32 @@ def create_pdf(files):
                     else:
                         split_height = remaining_space + OVERLAP_PIXELS
                         img_part = img_to_process.crop((0, 0, img_to_process.width, split_height))
-                        img_to_process = img_to_process.crop(
-                            (0, split_height - OVERLAP_PIXELS, 
-                             img_to_process.width, img_to_process.height)
-                        )
+                        img_to_process = img_to_process.crop((0, split_height - OVERLAP_PIXELS, 
+                                                             img_to_process.width, img_to_process.height))
 
                     draw_img = ImageDraw.Draw(img_part)
 
                     fraction = strip_mapping.get(question_number_to_display, None)
                     if fraction is not None:
                         strip_width = int(img_part.width * fraction)
-                        draw_img.rectangle(
-                            [(0, 0), (strip_width, img_part.height)], 
-                            fill=(255, 255, 255)
-                        )
+                        draw_img.rectangle([(0, 0), (strip_width, img_part.height)], 
+                                         fill=(255, 255, 255))
 
                     if is_first_part and question_number_to_display is not None:
                         try:
-                            bbox = draw_img.textbbox(
-                                (0, 0), f"{question_number_to_display}.", 
-                                font=question_font
-                            )
+                            bbox = draw_img.textbbox((0, 0), f"{question_number_to_display}.", 
+                                                    font=question_font)
                             text_width_q = bbox[2] - bbox[0]
                             text_height_q = bbox[3] - bbox[1]
                             text_x = (strip_width - text_width_q - 10) if fraction is not None else 10
-                            draw_img.text(
-                                (text_x, 10), f"{question_number_to_display}.", 
-                                font=question_font, fill="black"
-                            )
+                            draw_img.text((text_x, 10), f"{question_number_to_display}.", 
+                                        font=question_font, fill="black")
                         except:
-                            draw_img.text(
-                                (10, 10), f"{question_number_to_display}.", 
-                                font=question_font, fill="black"
-                            )
+                            draw_img.text((10, 10), f"{question_number_to_display}.", 
+                                        font=question_font, fill="black")
                         is_first_part = False
 
-                    # Place image based on alignment choice
-                    if alignment == "Center":
-                        x_position = (A4_WIDTH - img_part.width) // 2
-                    else:  # Left alignment
-                        x_position = 50  # 50px left margin
-                    
-                    current_page.paste(img_part, (x_position, y_offset))
-                    
+                    current_page.paste(img_part, (LEFT_MARGIN, y_offset))
                     y_offset += img_part.height + GAP_BETWEEN_IMAGES
 
                     if img_to_process:
