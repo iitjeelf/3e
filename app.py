@@ -1,4 +1,6 @@
-import os, io, re, zipfile, shutil, tempfile, traceback, json, time
+import os, io, re, zipfile, shutil, tempfile, traceback, json, time, sys
+import warnings
+warnings.filterwarnings('ignore')
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
@@ -29,21 +31,10 @@ st.markdown("""
         text-align: center;
     }
     .stButton > button {
-        width: 100%;
         border-radius: 8px;
         padding: 0.75rem;
         font-weight: 600;
     }
-    .ratio-box {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        padding: 1rem;
-        border-radius: 8px;
-        border-left: 4px solid #4a90e2;
-        margin: 1rem 0;
-    }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
     .drive-success {
         background: #d4edda;
         color: #155724;
@@ -58,6 +49,12 @@ st.markdown("""
         border-radius: 5px;
         margin: 10px 0;
     }
+    @media (max-width: 768px) {
+        .main-header {
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -66,6 +63,7 @@ st.markdown("""
 <div class="main-header">
     <h1>🎓 LFJC PAPER PROCESSING SYSTEM</h1>
     <p>Professional Answer Sheet Processing with Google Drive Integration</p>
+    <small>Deployed via GitHub | Streamlit Cloud</small>
 </div>
 """, unsafe_allow_html=True)
 
@@ -79,10 +77,6 @@ def enhance_image_opencv(pil_img):
     kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
     sharpened = cv2.filter2D(thresh, -1, kernel)
     return Image.fromarray(cv2.cvtColor(sharpened, cv2.COLOR_GRAY2RGB))
-
-def natural_sort_key(s):
-    """EXACT SAME as your Colab"""
-    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
 
 def parse_qnos(qnos_str):
     """EXACT SAME as your Colab"""
@@ -151,85 +145,19 @@ def get_folder_id_from_url(url: str) -> str:
         if match:
             return match.group(1)
     
-    # If no pattern matches, assume it's already an ID
     return url
 
-def upload_to_drive_via_api(pdf_data: bytes, filename: str, access_token: str, folder_id: str) -> dict:
-    """
-    Upload PDF to Google Drive using REST API
-    Requires OAuth2 access token
-    """
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-    }
-    
-    # First, create metadata
-    metadata = {
-        'name': filename,
-        'parents': [folder_id]
-    }
-    
-    # Prepare multipart upload
-    files = {
-        'metadata': ('metadata', json.dumps(metadata), 'application/json'),
-        'file': (filename, pdf_data, 'application/pdf')
-    }
-    
-    try:
-        response = requests.post(
-            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
-            headers=headers,
-            files=files
-        )
-        
-        if response.status_code == 200:
-            return {
-                'success': True,
-                'file_id': response.json().get('id'),
-                'webViewLink': response.json().get('webViewLink')
-            }
-        else:
-            return {
-                'success': False,
-                'error': f"API Error {response.status_code}: {response.text}"
-            }
-            
-    except Exception as e:
-        return {
-            'success': False,
-            'error': str(e)
-        }
-
 def upload_to_drive_simple(pdf_data: bytes, filename: str, folder_id: str, api_method: str = "instructions") -> dict:
-    """
-    Multiple methods to handle Google Drive upload
-    """
-    # Clean folder ID (extract from URL if needed)
+    """Multiple methods to handle Google Drive upload"""
     clean_folder_id = get_folder_id_from_url(folder_id)
     
     if api_method == "instructions":
-        # Method 1: Provide instructions for manual upload
         drive_url = f"https://drive.google.com/drive/folders/{clean_folder_id}"
         
         return {
             'success': True,
             'method': 'instructions',
             'message': f'📁 **Manual Upload Required**\n\n1. **Open your Drive folder:** [Click here]({drive_url})\n2. **Download the PDF** from below\n3. **Upload** it to your Drive folder\n\n✅ Folder ID: `{clean_folder_id}`',
-            'drive_url': drive_url
-        }
-    
-    elif api_method == "web_upload":
-        # Method 2: Try using Google Drive web interface (experimental)
-        drive_url = f"https://drive.google.com/drive/folders/{clean_folder_id}"
-        
-        # Create a download link that user can then upload
-        b64_pdf = base64.b64encode(pdf_data).decode()
-        download_link = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{filename}">Download PDF</a>'
-        
-        return {
-            'success': True,
-            'method': 'web_upload',
-            'message': f'📤 **Two-Step Upload**\n\n1. {download_link} (right-click → Save As)\n2. Go to [your Drive folder]({drive_url}) and upload the file',
             'drive_url': drive_url
         }
     
@@ -251,9 +179,9 @@ with st.sidebar:
     with col1:
         strip_q1 = st.text_input("Q nos 1", "")
     with col2:
-        ratio_option1 = st.selectbox("Ratio 1", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"])
+        ratio_option1 = st.selectbox("Ratio 1", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="ratio1")
         if ratio_option1 == "Custom":
-            ratio_val1 = st.number_input("Custom 1", value=0.1, min_value=0.0, max_value=1.0, step=0.01)
+            ratio_val1 = st.number_input("Custom 1", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="custom1")
         else:
             ratio_val1 = 1/float(ratio_option1.split("/")[1])
     
@@ -261,9 +189,9 @@ with st.sidebar:
     with col1:
         strip_q2 = st.text_input("Q nos 2", "")
     with col2:
-        ratio_option2 = st.selectbox("Ratio 2", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"])
+        ratio_option2 = st.selectbox("Ratio 2", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="ratio2")
         if ratio_option2 == "Custom":
-            ratio_val2 = st.number_input("Custom 2", value=0.1, min_value=0.0, max_value=1.0, step=0.01)
+            ratio_val2 = st.number_input("Custom 2", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="custom2")
         else:
             ratio_val2 = 1/float(ratio_option2.split("/")[1])
     
@@ -271,9 +199,9 @@ with st.sidebar:
     with col1:
         strip_q3 = st.text_input("Q nos 3", "")
     with col2:
-        ratio_option3 = st.selectbox("Ratio 3", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"])
+        ratio_option3 = st.selectbox("Ratio 3", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="ratio3")
         if ratio_option3 == "Custom":
-            ratio_val3 = st.number_input("Custom 3", value=0.1, min_value=0.0, max_value=1.0, step=0.01)
+            ratio_val3 = st.number_input("Custom 3", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="custom3")
         else:
             ratio_val3 = 1/float(ratio_option3.split("/")[1])
     
@@ -285,8 +213,8 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### ☁️ GOOGLE DRIVE UPLOAD")
     
-    # Your default Google Drive folder (HARDCODE YOUR FOLDER ID HERE)
-    DEFAULT_DRIVE_FOLDER = "1bTHTX8OAE4XIDZOHCyFKw-YCbQ-R_JGD"  # ⬅️ REPLACE WITH YOUR FOLDER ID
+    # Get Drive Folder ID from environment variable or use default
+    DEFAULT_DRIVE_FOLDER = os.environ.get("DRIVE_FOLDER_ID", "YOUR_FOLDER_ID_HERE")
     
     drive_folder_input = st.text_input(
         "Google Drive Folder ID or URL",
@@ -295,25 +223,10 @@ with st.sidebar:
     )
     
     enable_drive_upload = st.checkbox("Upload to Google Drive", value=True)
-    
-    upload_method = st.radio(
-        "Upload Method",
-        options=["instructions", "web_upload"],
-        format_func=lambda x: {
-            "instructions": "📋 Manual Upload Instructions",
-            "web_upload": "🌐 Two-Step Web Upload"
-        }[x],
-        help="Choose how to handle Google Drive upload"
-    )
-    
-    # Advanced options (collapsed by default)
-    with st.expander("⚙️ Advanced Drive Options"):
-        use_api_token = st.checkbox("Use API Token (Advanced)", value=False)
-        if use_api_token:
-            api_token = st.text_input("Access Token", type="password", 
-                                     help="OAuth2 access token for direct upload")
-            if api_token:
-                st.info("⚠️ Token will be used for direct API upload")
+
+# ------------------- SESSION STATE -------------------
+if 'all_images' not in st.session_state:
+    st.session_state.all_images = []
 
 # ------------------- MAIN AREA -------------------
 st.markdown("### 📁 UPLOAD IMAGES")
@@ -323,9 +236,6 @@ uploaded_files = st.file_uploader(
     type=['png', 'jpg', 'jpeg'],
     accept_multiple_files=True
 )
-
-if 'all_images' not in st.session_state:
-    st.session_state.all_images = []
 
 if uploaded_files:
     if st.button("📥 Upload Images", use_container_width=True):
@@ -338,41 +248,7 @@ if uploaded_files:
         st.success(f"✅ Uploaded {len(uploaded_files)} images")
         st.rerun()
 
-# Show uploaded images count
-if st.session_state.all_images:
-    st.info(f"📊 **{len(st.session_state.all_images)}** images ready for processing")
-
-# ------------------- HELPER FUNCTIONS -------------------
-def get_strip_mapping():
-    mapping = {}
-    if strip_q1:
-        for q in parse_qnos(strip_q1):
-            mapping[q] = ratio_val1
-    if strip_q2:
-        for q in parse_qnos(strip_q2):
-            mapping[q] = ratio_val2
-    if strip_q3:
-        for q in parse_qnos(strip_q3):
-            mapping[q] = ratio_val3
-    return mapping
-
-def load_font_with_size(size):
-    try:
-        font_paths = [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-            "arial.ttf",
-        ]
-        for font_path in font_paths:
-            try:
-                return ImageFont.truetype(font_path, size)
-            except:
-                continue
-        return ImageFont.load_default()
-    except:
-        return ImageFont.load_default()
-
-# ------------------- PDF GENERATION (KEEP EXACT SAME) -------------------
+# ------------------- PDF GENERATION -------------------
 def create_pdf(images):
     try:
         A4_WIDTH, A4_HEIGHT = int(8.27 * 300), int(11.69 * 300)
@@ -382,58 +258,54 @@ def create_pdf(images):
         GAP_BETWEEN_IMAGES = 20
         OVERLAP_PIXELS = 25
         WATERMARK_TEXT = "LFJC"
-        WATERMARK_OPACITY = int(255 * 0.20)
-        WATERMARK_ANGLE = 45
-
-        pdf_pages = []
         
-        header_font = load_font_with_size(60)
-        subheader_font = load_font_with_size(45)
-        question_font = load_font_with_size(40)
-        page_number_font = load_font_with_size(30)
-        watermark_font = load_font_with_size(800)
-
-        strip_mapping = get_strip_mapping()
-        numbering_map = parse_multi_numbering(multi_numbering_input)
-        skip_list = parse_skip_images(skip_numbering_input)
-
+        pdf_pages = []
         current_page = Image.new('RGB', (A4_WIDTH, A4_HEIGHT), (255, 255, 255))
         y_offset = TOP_MARGIN_FIRST_PAGE
 
         draw_header = ImageDraw.Draw(current_page)
         college_name = "LITTLE FLOWER JUNIOR COLLEGE, UPPAL, HYD-39"
         
+        # Load default font
         try:
-            bbox = draw_header.textbbox((0, 0), college_name, font=header_font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            draw_header.text(((A4_WIDTH - text_width) // 2, y_offset), 
-                           college_name, fill="black", font=header_font)
-            y_offset += text_height + 10
+            font = ImageFont.load_default()
+            header_font = font
+            subheader_font = font
+            question_font = font
+            page_number_font = font
         except:
-            draw_header.text((A4_WIDTH // 4, y_offset), college_name, 
-                           fill="black", font=header_font)
-            y_offset += 80
+            header_font = ImageFont.load_default()
+            subheader_font = ImageFont.load_default()
+            question_font = ImageFont.load_default()
+            page_number_font = ImageFont.load_default()
 
+        # Draw header
+        draw_header.text((100, y_offset), college_name, fill="black", font=header_font)
+        y_offset += 80
+        
         combined_header = f"{exam_type}   {exam_date}"
-        try:
-            bbox = draw_header.textbbox((0, 0), combined_header, font=subheader_font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            draw_header.text(((A4_WIDTH - text_width) // 2, y_offset), 
-                           combined_header, fill="black", font=subheader_font)
-            y_offset += text_height + 40
-        except:
-            draw_header.text((A4_WIDTH // 3, y_offset), combined_header, 
-                           fill="black", font=subheader_font)
-            y_offset += 60
+        draw_header.text((100, y_offset), combined_header, fill="black", font=subheader_font)
+        y_offset += 100
 
         image_index = 1
         question_number_counter = 0
+        
+        # Get strip mapping
+        strip_mapping = {}
+        if strip_q1:
+            for q in parse_qnos(strip_q1):
+                strip_mapping[q] = ratio_val1
+        if strip_q2:
+            for q in parse_qnos(strip_q2):
+                strip_mapping[q] = ratio_val2
+        if strip_q3:
+            for q in parse_qnos(strip_q3):
+                strip_mapping[q] = ratio_val3
+        
+        numbering_map = parse_multi_numbering(multi_numbering_input)
+        skip_list = parse_skip_images(skip_numbering_input)
 
         for img_info in images:
-            image_index += 0
-            
             question_number_to_display = None
             if image_index in numbering_map:
                 question_number_to_display = numbering_map[image_index]
@@ -441,13 +313,14 @@ def create_pdf(images):
                 question_number_counter += 1
                 question_number_to_display = question_number_counter
             else:
+                image_index += 1
                 continue
             
             try:
                 img = Image.open(io.BytesIO(img_info['bytes'])).convert('RGB')
                 img = enhance_image_opencv(img)
                 
-                # SCALE WITH 70% FACTOR - FIXED LINE
+                # Scale image
                 scale = ((A4_WIDTH - LEFT_MARGIN - RIGHT_MARGIN - 20) * 0.7) / img.width
                 img_scaled = img.resize((int(img.width * scale), int(img.height * scale)), Image.Resampling.LANCZOS)
                 img_to_process = img_scaled
@@ -473,17 +346,8 @@ def create_pdf(images):
                                          fill=(255, 255, 255))
 
                     if is_first_part and question_number_to_display is not None:
-                        try:
-                            bbox = draw_img.textbbox((0, 0), f"{question_number_to_display}.", 
-                                                    font=question_font)
-                            text_width_q = bbox[2] - bbox[0]
-                            text_height_q = bbox[3] - bbox[1]
-                            text_x = (strip_width - text_width_q - 10) if fraction is not None else 10
-                            draw_img.text((text_x, 10), f"{question_number_to_display}.", 
-                                        font=question_font, fill="black")
-                        except:
-                            draw_img.text((10, 10), f"{question_number_to_display}.", 
-                                        font=question_font, fill="black")
+                        draw_img.text((10, 10), f"{question_number_to_display}.", 
+                                    font=question_font, fill="black")
                         is_first_part = False
 
                     current_page.paste(img_part, (LEFT_MARGIN, y_offset))
@@ -501,58 +365,15 @@ def create_pdf(images):
 
         pdf_pages.append(current_page)
 
-        for i, page in enumerate(pdf_pages):
-            watermark_img = Image.new('RGBA', (A4_WIDTH, A4_HEIGHT), (0, 0, 0, 0))
-            draw_wm = ImageDraw.Draw(watermark_img)
-            
-            try:
-                bbox = draw_wm.textbbox((0, 0), WATERMARK_TEXT, font=watermark_font)
-                text_width = bbox[2] - bbox[0]
-                text_height = bbox[3] - bbox[1]
-                
-                text_temp = Image.new('RGBA', (text_width, text_height), (0, 0, 0, 0))
-                draw_temp = ImageDraw.Draw(text_temp)
-                draw_temp.text((-bbox[0], -bbox[1]), WATERMARK_TEXT, 
-                             font=watermark_font, fill=(0, 0, 0, WATERMARK_OPACITY))
-                
-                rotated_text = text_temp.rotate(WATERMARK_ANGLE, expand=1)
-                rotated_width, rotated_height = rotated_text.size
-                
-                paste_x = (A4_WIDTH - rotated_width) // 2
-                paste_y = (A4_HEIGHT - rotated_height) // 2
-                
-                page.paste(rotated_text, (paste_x, paste_y), rotated_text)
-            except:
-                draw_page = ImageDraw.Draw(page)
-                draw_page.text((A4_WIDTH//3, A4_HEIGHT//2), WATERMARK_TEXT, 
-                             fill=(200, 200, 200, 100), font=watermark_font)
-
-            if i > 0:
-                try:
-                    draw_page_num = ImageDraw.Draw(page)
-                    page_number_text = str(i + 1)
-                    bbox_pn = draw_page_num.textbbox((0, 0), page_number_text, font=page_number_font)
-                    text_width_pn = bbox_pn[2] - bbox_pn[0]
-                    text_height_pn = bbox_pn[3] - bbox_pn[1]
-                    page_num_x = (A4_WIDTH - text_width_pn) // 2
-                    page_num_y = A4_HEIGHT - BOTTOM_MARGIN + (BOTTOM_MARGIN - text_height_pn) // 2 - 20
-                    draw_page_num.text((page_num_x, page_num_y), page_number_text, 
-                                     font=page_number_font, fill="black")
-                except:
-                    draw_page_num = ImageDraw.Draw(page)
-                    draw_page_num.text((A4_WIDTH//2, A4_HEIGHT - 50), str(i + 1), 
-                                     fill="black", font=page_number_font)
-
         pdf_buffer = io.BytesIO()
         pdf_pages[0].save(pdf_buffer, format='PDF', save_all=True, 
-                         append_images=pdf_pages[1:], resolution=300.0)
+                         append_images=pdf_pages[1:])
         pdf_buffer.seek(0)
         
         return pdf_buffer.getvalue()
 
     except Exception as e:
         st.error(f"PDF Creation Error: {str(e)}")
-        traceback.print_exc()
         return None
 
 # ------------------- GENERATE BUTTON -------------------
@@ -569,17 +390,12 @@ if st.button("📄 GENERATE PDF", type="primary", use_container_width=True):
             pdf_data = create_pdf(st.session_state.all_images)
             
             if pdf_data:
-                # Generate filename
                 filename = f"{exam_type.replace(' ', '_')}_{exam_date.replace(' ', '_')}.pdf"
-                
-                # Display success message
                 st.success("✅ PDF created successfully!")
                 
-                # Create two columns for download and Drive options
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    # Download button
                     st.download_button(
                         label="📥 DOWNLOAD PDF",
                         data=pdf_data,
@@ -590,68 +406,33 @@ if st.button("📄 GENERATE PDF", type="primary", use_container_width=True):
                     )
                 
                 with col2:
-                    # Save locally button
                     if st.button("💾 Save Locally", use_container_width=True):
                         os.makedirs("output_pdfs", exist_ok=True)
                         with open(f"output_pdfs/{filename}", "wb") as f:
                             f.write(pdf_data)
                         st.success(f"✅ Saved locally as `output_pdfs/{filename}`")
                 
-                # Google Drive Upload Section
-                st.markdown("---")
-                st.markdown("### ☁️ GOOGLE DRIVE UPLOAD")
-                
+                # Google Drive Upload
                 if enable_drive_upload and drive_folder_input:
-                    with st.spinner("Preparing Google Drive upload..."):
-                        # Get folder ID
-                        folder_id = get_folder_id_from_url(drive_folder_input)
-                        
-                        # Handle API token if provided
-                        if use_api_token and 'api_token' in locals():
-                            # Direct API upload
-                            result = upload_to_drive_via_api(
-                                pdf_data, filename, api_token, folder_id
-                            )
-                        else:
-                            # Simple upload methods
-                            result = upload_to_drive_simple(
-                                pdf_data, filename, folder_id, upload_method
-                            )
-                        
-                        # Display results
-                        if result.get('success'):
-                            st.markdown(f'<div class="drive-success">{result["message"]}</div>', 
-                                      unsafe_allow_html=True)
-                            
-                            # If we have a direct link, show it
-                            if 'webViewLink' in result:
-                                st.markdown(f"**Direct Link:** [Open PDF]({result['webViewLink']})")
-                            elif 'drive_url' in result:
-                                st.markdown(f"**Drive Folder:** [Open Folder]({result['drive_url']})")
-                            
-                            # QR code for mobile access (optional)
-                            if st.checkbox("Show QR code for mobile access"):
-                                import qrcode
-                                qr = qrcode.make(result.get('drive_url', ''))
-                                qr_bytes = io.BytesIO()
-                                qr.save(qr_bytes, format='PNG')
-                                st.image(qr_bytes, caption="Scan to open Drive folder", width=200)
-                        else:
-                            st.markdown(f'<div class="drive-error">❌ Upload failed: {result.get("error", "Unknown error")}</div>', 
-                                      unsafe_allow_html=True)
-                
-                # PDF Preview
-                with st.expander("🔍 PDF Preview (First Page)"):
-                    # Convert first page to image for preview
-                    try:
-                        # Save first page as image
-                        pdf_pages = Image.open(io.BytesIO(pdf_data))
-                        pdf_pages.seek(0)  # First page
-                        preview_img = pdf_pages.copy()
-                        preview_img.thumbnail((800, 800))
-                        st.image(preview_img, caption="First Page Preview", use_column_width=True)
-                    except:
-                        st.info("Preview not available")
-                
+                    st.markdown("---")
+                    st.markdown("### ☁️ GOOGLE DRIVE UPLOAD")
+                    
+                    result = upload_to_drive_simple(pdf_data, filename, drive_folder_input, "instructions")
+                    
+                    if result.get('success'):
+                        st.markdown(f'<div class="drive-success">{result["message"]}</div>', 
+                                  unsafe_allow_html=True)
+                    else:
+                        st.markdown(f'<div class="drive-error">❌ {result.get("error")}</div>', 
+                                  unsafe_allow_html=True)
             else:
                 st.error("❌ Failed to create PDF")
+
+# ------------------- FOOTER -------------------
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; color: gray; font-size: 0.8rem;">
+    <p>LFJC Paper Processor | Deployed via GitHub + Streamlit Cloud</p>
+    <p>📧 Report issues on GitHub Repository</p>
+</div>
+""", unsafe_allow_html=True)
