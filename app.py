@@ -23,38 +23,122 @@ st.markdown("""
         margin-bottom: 2rem;
         color: white;
         text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     .stButton > button {
         width: 100%;
         border-radius: 8px;
         padding: 0.75rem;
         font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     .ratio-box {
         background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        padding: 1rem;
-        border-radius: 8px;
-        border-left: 4px solid #4a90e2;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 5px solid #4a90e2;
         margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     .selected-file {
         background: #f0f8ff;
-        padding: 8px;
-        border-radius: 5px;
-        margin: 5px 0;
-        border-left: 3px solid #4a90e2;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 8px 0;
+        border-left: 4px solid #4a90e2;
+        font-size: 0.9rem;
     }
+    .stSidebar .sidebar-content {
+        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    /* Hide Streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    .stDeployButton {display:none;}
     header {visibility: hidden;}
+    
+    /* Professional styling */
+    .section-header {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #4a90e2;
+    }
+    
+    /* Sidebar show/hide button */
+    .sidebar-toggle {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar-toggle:hover {
+        background: #357ae8;
+        transform: scale(1.1);
+    }
 </style>
 """, unsafe_allow_html=True)
+
+# ------------------- SESSION STATE FOR SIDEBAR -------------------
+if 'sidebar_visible' not in st.session_state:
+    st.session_state.sidebar_visible = True
+
+# ------------------- SIDEBAR TOGGLE BUTTON -------------------
+if not st.session_state.sidebar_visible:
+    st.markdown("""
+    <div class="sidebar-toggle" onclick="document.getElementById('sidebar-toggle-script').click()">
+        ☰
+    </div>
+    <script>
+        // Create hidden button for toggling sidebar
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'sidebar-toggle-script';
+        toggleBtn.style.display = 'none';
+        document.body.appendChild(toggleBtn);
+        
+        toggleBtn.onclick = function() {
+            this.dispatchEvent(new CustomEvent('toggle-sidebar'));
+        };
+    </script>
+    """, unsafe_allow_html=True)
+    
+    # Add JavaScript to handle sidebar toggle
+    st.components.v1.html("""
+    <script>
+        const toggleBtn = document.getElementById('sidebar-toggle-script');
+        toggleBtn.addEventListener('toggle-sidebar', function() {
+            window.parent.postMessage({
+                type: 'streamlit:setComponentValue',
+                value: 'toggle-sidebar'
+            }, '*');
+        });
+    </script>
+    """)
 
 # ------------------- HEADER -------------------
 st.markdown("""
 <div class="main-header">
     <h1>🎓 LFJC PAPER PROCESSING SYSTEM</h1>
-    <p>Professional Answer Sheet Processing | FREE Version</p>
+    <p>Professional Answer Sheet Processing | Little Flower Junior College, Uppal</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -65,65 +149,117 @@ if 'processed_files' not in st.session_state:
     st.session_state.processed_files = []
 
 # ------------------- SIDEBAR -------------------
-with st.sidebar:
-    st.markdown("### 📋 EXAM DETAILS")
-    exam_type = st.text_input("Exam Type", "")
-    exam_date = st.text_input("Exam Date (DD-MM-YYYY)", "")
-    
-    st.markdown("### ✂️ STRIP SETTINGS")
-    
-    # Strip 1
-    st.markdown('<div class="ratio-box">', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        strip_q1 = st.text_input("Q nos 1", "")
-    with col2:
-        ratio_option1 = st.selectbox("Ratio 1", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="r1")
-        if ratio_option1 == "Custom":
-            ratio_val1 = st.number_input("Custom 1", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="c1")
-        else:
-            ratio_val1 = 1/float(ratio_option1.split("/")[1])
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Strip 2
-    st.markdown('<div class="ratio-box">', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        strip_q2 = st.text_input("Q nos 2", "")
-    with col2:
-        ratio_option2 = st.selectbox("Ratio 2", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="r2")
-        if ratio_option2 == "Custom":
-            ratio_val2 = st.number_input("Custom 2", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="c2")
-        else:
-            ratio_val2 = 1/float(ratio_option2.split("/")[1])
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Strip 3
-    st.markdown('<div class="ratio-box">', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        strip_q3 = st.text_input("Q nos 3", "")
-    with col2:
-        ratio_option3 = st.selectbox("Ratio 3", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="r3")
-        if ratio_option3 == "Custom":
-            ratio_val3 = st.number_input("Custom 3", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="c3")
-        else:
-            ratio_val3 = 1/float(ratio_option3.split("/")[1])
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.markdown("### 🔢 NUMBERING OPTIONS")
-    multi_numbering_input = st.text_input("Numbering Ranges", placeholder="1-5:1, 6-10:41, 11-15:51")
-    skip_numbering_input = st.text_input("Skip Images", placeholder="2,4-5,7")
+if st.session_state.sidebar_visible:
+    with st.sidebar:
+        # Add close button at top of sidebar
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.markdown("### ⚙️ SETTINGS PANEL")
+        with col2:
+            if st.button("✕", help="Close sidebar", key="close_sidebar"):
+                st.session_state.sidebar_visible = False
+                st.rerun()
+        
+        st.markdown("---")
+        
+        st.markdown('<div class="section-header">📋 EXAM DETAILS</div>', unsafe_allow_html=True)
+        exam_type = st.text_input("Exam Type", "", placeholder="e.g., Semester I - Physics")
+        exam_date = st.text_input("Exam Date (DD-MM-YYYY)", "", placeholder="15-01-2024")
+        
+        st.markdown('<div class="section-header">📐 PAGE ALIGNMENT</div>', unsafe_allow_html=True)
+        alignment = st.radio(
+            "Image Alignment",
+            ["Center", "Left", "Right"],
+            horizontal=True,
+            index=0,
+            help="Position images on the page"
+        )
+        
+        st.markdown('<div class="section-header">✂️ STRIP CROPPING SETTINGS</div>', unsafe_allow_html=True)
+        
+        # Strip 1
+        st.markdown('<div class="ratio-box">', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            strip_q1 = st.text_input("Question Range 1", "", placeholder="e.g., 1-5")
+        with col2:
+            ratio_option1 = st.selectbox("Ratio 1", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="r1")
+            if ratio_option1 == "Custom":
+                ratio_val1 = st.number_input("Custom Ratio 1", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="c1")
+            else:
+                ratio_val1 = 1/float(ratio_option1.split("/")[1])
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Strip 2
+        st.markdown('<div class="ratio-box">', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            strip_q2 = st.text_input("Question Range 2", "", placeholder="e.g., 6-10")
+        with col2:
+            ratio_option2 = st.selectbox("Ratio 2", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="r2")
+            if ratio_option2 == "Custom":
+                ratio_val2 = st.number_input("Custom Ratio 2", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="c2")
+            else:
+                ratio_val2 = 1/float(ratio_option2.split("/")[1])
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Strip 3
+        st.markdown('<div class="ratio-box">', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            strip_q3 = st.text_input("Question Range 3", "", placeholder="e.g., 11-15")
+        with col2:
+            ratio_option3 = st.selectbox("Ratio 3", options=[f"1/{i}" for i in range(5, 21)] + ["Custom"], key="r3")
+            if ratio_option3 == "Custom":
+                ratio_val3 = st.number_input("Custom Ratio 3", value=0.1, min_value=0.0, max_value=1.0, step=0.01, key="c3")
+            else:
+                ratio_val3 = 1/float(ratio_option3.split("/")[1])
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="section-header">🔢 NUMBERING OPTIONS</div>', unsafe_allow_html=True)
+        multi_numbering_input = st.text_input("Custom Numbering Ranges", 
+                                            placeholder="Format: 1-5:1, 6-10:41, 11-15:51",
+                                            help="Map image ranges to custom starting numbers")
+        skip_numbering_input = st.text_input("Skip Images", 
+                                           placeholder="e.g., 2,4-5,7",
+                                           help="Images to skip from numbering sequence")
+        
+        st.markdown("---")
+        
+        # Quick Help
+        with st.expander("📖 Quick Help"):
+            st.markdown("""
+            **Format Examples:**
+            - **Question Ranges:** `1-5, 10, 15-20`
+            - **Custom Numbering:** `1-5:1, 6-10:41`  
+              (Images 1-5 start at 1, Images 6-10 start at 41)
+            - **Skip Images:** `2,4-5,7`  
+              (Skip images 2, 4, 5, and 7)
+            """)
+        
+        st.markdown("---")
+        
+        # Add show sidebar button at bottom
+        st.markdown("*Settings panel can be reopened from the ☰ button*")
+
+# Show reopen sidebar button if sidebar is hidden
+else:
+    st.markdown("""
+    <div style='text-align: center; padding: 2rem;'>
+        <h3>Settings Panel Hidden</h3>
+        <p>Click the ☰ button in the top-left corner to reopen settings.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ------------------- MAIN AREA -------------------
 st.markdown("### 📁 UPLOAD ANSWER SHEETS")
 
 # File uploader with batch support
 uploaded_files = st.file_uploader(
-    "Choose answer sheet images",
+    "Choose answer sheet images (PNG, JPG, JPEG format)",
     type=['png', 'jpg', 'jpeg'],
     accept_multiple_files=True,
-    help="Select multiple images (max 200MB total)"
+    help="Select multiple images. Each batch processes up to 10 images."
 )
 
 # Batch management
@@ -131,7 +267,8 @@ if uploaded_files:
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("📥 **ADD TO BATCH**", use_container_width=True):
+        if st.button("📥 **ADD TO PROCESSING QUEUE**", use_container_width=True, type="primary"):
+            new_files_count = 0
             for uploaded_file in uploaded_files:
                 # Check if file already exists
                 if not any(f['name'] == uploaded_file.name for f in st.session_state.uploaded_files):
@@ -140,18 +277,24 @@ if uploaded_files:
                         'bytes': uploaded_file.read(),
                         'batch': len(st.session_state.uploaded_files) // 10 + 1
                     })
-            st.success(f"✅ Added {len(uploaded_files)} images to batch")
+                    new_files_count += 1
+            
+            if new_files_count > 0:
+                st.success(f"✅ Successfully added {new_files_count} new images to processing queue")
+            else:
+                st.info("⚠️ All selected images are already in the processing queue")
             st.rerun()
     
     with col2:
-        if st.button("🗑️ **CLEAR ALL**", use_container_width=True):
+        if st.button("🗑️ **CLEAR PROCESSING QUEUE**", use_container_width=True, type="secondary"):
             st.session_state.uploaded_files = []
             st.session_state.processed_files = []
+            st.success("✅ Processing queue cleared successfully")
             st.rerun()
 
 # Display uploaded files with batch numbers
 if st.session_state.uploaded_files:
-    st.markdown(f"### 📋 SELECTED FILES ({len(st.session_state.uploaded_files)} images)")
+    st.markdown(f"### 📋 PROCESSING QUEUE ({len(st.session_state.uploaded_files)} images)")
     
     # Show by batches
     batches = {}
@@ -162,14 +305,17 @@ if st.session_state.uploaded_files:
         batches[batch_num].append(file_info['name'])
     
     for batch_num, files in sorted(batches.items()):
-        with st.expander(f"📦 **Batch {batch_num}** ({len(files)} images)"):
+        with st.expander(f"📦 **Batch {batch_num}** ({len(files)} images)", expanded=True):
             for file_name in files:
                 st.markdown(f'<div class="selected-file">📄 {file_name}</div>', unsafe_allow_html=True)
             
             # Remove batch button
-            if st.button(f"❌ Remove Batch {batch_num}", key=f"remove_batch_{batch_num}"):
-                st.session_state.uploaded_files = [f for f in st.session_state.uploaded_files if f['batch'] != batch_num]
-                st.rerun()
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                if st.button(f"Remove Batch {batch_num}", key=f"remove_batch_{batch_num}"):
+                    st.session_state.uploaded_files = [f for f in st.session_state.uploaded_files if f['batch'] != batch_num]
+                    st.success(f"✅ Batch {batch_num} removed from processing queue")
+                    st.rerun()
 
 # ------------------- HELPER FUNCTIONS -------------------
 def enhance_image_opencv(pil_img):
@@ -274,7 +420,6 @@ def create_pdf(files):
         A4_WIDTH, A4_HEIGHT = int(8.27 * 300), int(11.69 * 300)
         TOP_MARGIN_FIRST_PAGE, TOP_MARGIN_SUBSEQUENT_PAGES = 125, 110
         BOTTOM_MARGIN = 105
-        LEFT_MARGIN, RIGHT_MARGIN = 0, 0
         GAP_BETWEEN_IMAGES = 20
         OVERLAP_PIXELS = 25
         WATERMARK_TEXT = "LFJC"
@@ -345,9 +490,19 @@ def create_pdf(files):
                 img = Image.open(io.BytesIO(file_info['bytes'])).convert('RGB')
                 img = enhance_image_opencv(img)
                 
-                # Scale with 70% factor
-                scale = ((A4_WIDTH - LEFT_MARGIN - RIGHT_MARGIN - 20) * 0.9) / img.width
-                img_scaled = img.resize((int(img.width * scale), int(img.height * scale)), Image.Resampling.LANCZOS)
+                # Scale image based on alignment choice
+                if alignment == "Center":
+                    # Scale to 90% of page width for centered images
+                    scale = (A4_WIDTH * 0.9) / img.width
+                else:  # Left or Right alignment
+                    # Use smaller scale to leave space on sides
+                    SIDE_MARGIN = 50
+                    scale = ((A4_WIDTH - SIDE_MARGIN) * 0.9) / img.width
+                
+                img_scaled = img.resize(
+                    (int(img.width * scale), int(img.height * scale)), 
+                    Image.Resampling.LANCZOS
+                )
                 img_to_process = img_scaled
                 is_first_part = True
 
@@ -359,32 +514,51 @@ def create_pdf(files):
                     else:
                         split_height = remaining_space + OVERLAP_PIXELS
                         img_part = img_to_process.crop((0, 0, img_to_process.width, split_height))
-                        img_to_process = img_to_process.crop((0, split_height - OVERLAP_PIXELS, 
-                                                             img_to_process.width, img_to_process.height))
+                        img_to_process = img_to_process.crop(
+                            (0, split_height - OVERLAP_PIXELS, 
+                             img_to_process.width, img_to_process.height)
+                        )
 
                     draw_img = ImageDraw.Draw(img_part)
 
                     fraction = strip_mapping.get(question_number_to_display, None)
                     if fraction is not None:
                         strip_width = int(img_part.width * fraction)
-                        draw_img.rectangle([(0, 0), (strip_width, img_part.height)], 
-                                         fill=(255, 255, 255))
+                        draw_img.rectangle(
+                            [(0, 0), (strip_width, img_part.height)], 
+                            fill=(255, 255, 255)
+                        )
 
                     if is_first_part and question_number_to_display is not None:
                         try:
-                            bbox = draw_img.textbbox((0, 0), f"{question_number_to_display}.", 
-                                                    font=question_font)
+                            bbox = draw_img.textbbox(
+                                (0, 0), f"{question_number_to_display}.", 
+                                font=question_font
+                            )
                             text_width_q = bbox[2] - bbox[0]
                             text_height_q = bbox[3] - bbox[1]
                             text_x = (strip_width - text_width_q - 10) if fraction is not None else 10
-                            draw_img.text((text_x, 10), f"{question_number_to_display}.", 
-                                        font=question_font, fill="black")
+                            draw_img.text(
+                                (text_x, 10), f"{question_number_to_display}.", 
+                                font=question_font, fill="black"
+                            )
                         except:
-                            draw_img.text((10, 10), f"{question_number_to_display}.", 
-                                        font=question_font, fill="black")
+                            draw_img.text(
+                                (10, 10), f"{question_number_to_display}.", 
+                                font=question_font, fill="black"
+                            )
                         is_first_part = False
 
-                    current_page.paste(img_part, (LEFT_MARGIN, y_offset))
+                    # Place image based on alignment choice
+                    if alignment == "Center":
+                        x_position = (A4_WIDTH - img_part.width) // 2
+                    elif alignment == "Left":
+                        x_position = 50  # 50px left margin
+                    else:  # Right alignment
+                        x_position = A4_WIDTH - img_part.width - 50  # 50px right margin
+                    
+                    current_page.paste(img_part, (x_position, y_offset))
+                    
                     y_offset += img_part.height + GAP_BETWEEN_IMAGES
 
                     if img_to_process:
@@ -456,36 +630,44 @@ def create_pdf(files):
 
 # ------------------- GENERATE BUTTONS -------------------
 st.markdown("---")
-st.markdown("### 🚀 GENERATE OUTPUT")
+st.markdown("### 🚀 PROCESSING OPTIONS")
 
 if st.session_state.uploaded_files:
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("📄 **GENERATE PDF**", type="primary", use_container_width=True):
+        if st.button("📄 **GENERATE PDF DOCUMENT**", use_container_width=True, type="primary"):
             if not exam_type or not exam_date:
-                st.error("❌ Please enter exam details!")
+                st.error("❌ Please enter exam details in the settings panel!")
+                if not st.session_state.sidebar_visible:
+                    st.info("📝 Click the ☰ button in the top-left corner to open settings panel")
             else:
-                with st.spinner(f"Processing {len(st.session_state.uploaded_files)} images..."):
+                with st.spinner(f"🔨 Processing {len(st.session_state.uploaded_files)} images into PDF..."):
                     pdf_data = create_pdf(st.session_state.uploaded_files)
                     
                     if pdf_data:
-                        filename = f"{sanitize_filename(exam_type)}_{sanitize_filename(exam_date)}.pdf"
-                        st.success(f"✅ PDF created with {len(st.session_state.uploaded_files)} images!")
-                        st.download_button(
-                            label="📥 DOWNLOAD PDF",
-                            data=pdf_data,
-                            file_name=filename,
-                            mime="application/pdf",
-                            type="primary"
-                        )
+                        filename = f"{sanitize_filename(exam_type)}_{sanitize_filename(exam_date)}_processed.pdf"
+                        st.success(f"✅ PDF document created successfully!")
+                        
+                        col_d1, col_d2 = st.columns([3, 1])
+                        with col_d1:
+                            st.download_button(
+                                label="📥 **DOWNLOAD PDF DOCUMENT**",
+                                data=pdf_data,
+                                file_name=filename,
+                                mime="application/pdf",
+                                type="primary",
+                                use_container_width=True
+                            )
+                        with col_d2:
+                            st.metric("Pages", len(pdf_data) // 50000)  # Rough estimate
                     else:
-                        st.error("❌ Failed to create PDF")
+                        st.error("❌ Failed to create PDF document")
     
     with col2:
         # Create ZIP of processed images
-        if st.button("🗃️ **DOWNLOAD ZIP**", type="secondary", use_container_width=True):
-            with st.spinner("Creating ZIP file..."):
+        if st.button("🗃️ **EXPORT PROCESSED IMAGES**", use_container_width=True, type="secondary"):
+            with st.spinner("🔨 Creating archive of processed images..."):
                 try:
                     # Create processed images
                     temp_dir = tempfile.mkdtemp()
@@ -519,9 +701,9 @@ if st.session_state.uploaded_files:
                                     img = img.crop((original_width - crop_width, 0, original_width, img.height))
                                 
                                 # Save processed image
-                                filename = f"{question_number_to_display}.png"
+                                filename = f"Q{question_number_to_display:03d}.png"
                                 filepath = os.path.join(temp_dir, filename)
-                                img.save(filepath)
+                                img.save(filepath, "PNG", quality=95)
                                 processed_files.append(filepath)
                                 
                             except Exception as e:
@@ -536,31 +718,58 @@ if st.session_state.uploaded_files:
                             zipf.write(filepath, os.path.basename(filepath))
                     
                     zip_buffer.seek(0)
-                    zip_filename = f"{sanitize_filename(exam_type)}_{sanitize_filename(exam_date)}.zip"
+                    zip_filename = f"{sanitize_filename(exam_type)}_{sanitize_filename(exam_date)}_processed_images.zip"
                     
-                    st.success(f"✅ ZIP created with {len(processed_files)} images!")
-                    st.download_button(
-                        label="📥 DOWNLOAD ZIP",
-                        data=zip_buffer,
-                        file_name=zip_filename,
-                        mime="application/zip"
-                    )
+                    st.success(f"✅ Archive created with {len(processed_files)} processed images!")
+                    
+                    col_z1, col_z2 = st.columns([3, 1])
+                    with col_z1:
+                        st.download_button(
+                            label="📥 **DOWNLOAD IMAGE ARCHIVE**",
+                            data=zip_buffer,
+                            file_name=zip_filename,
+                            mime="application/zip",
+                            type="secondary",
+                            use_container_width=True
+                        )
+                    with col_z2:
+                        st.metric("Images", len(processed_files))
                     
                     # Cleanup
                     shutil.rmtree(temp_dir, ignore_errors=True)
                     
                 except Exception as e:
-                    st.error(f"ZIP Creation Error: {str(e)}")
+                    st.error(f"Archive Creation Error: {str(e)}")
     
     with col3:
-        if st.button("📦 **GENERATE BOTH**", type="primary", use_container_width=True):
-            st.info("Please use PDF or ZIP button individually for now")
+        if st.button("⚙️ **PROCESSING SETTINGS**", use_container_width=True, type="secondary"):
+            if not st.session_state.sidebar_visible:
+                st.session_state.sidebar_visible = True
+                st.rerun()
+            else:
+                st.info("📝 Settings panel is already open on the left side")
+else:
+    st.info("📤 Upload answer sheet images and add them to the processing queue to begin")
 
 # ------------------- FOOTER -------------------
 st.markdown("---")
 st.markdown("""
-<div style='text-align: center; color: #666; padding: 1rem;'>
-    <p style='margin: 0;'>📚 <strong>Little Flower Junior College</strong> | Paper Processing System</p>
-    <p style='margin: 0; font-size: 0.9rem;'>Uppal, Hyderabad - 39 | FREE Version</p>
+<div style='text-align: center; color: #444; padding: 1.5rem; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%); border-radius: 10px;'>
+    <p style='margin: 0; font-size: 1rem; font-weight: 600;'>📚 <strong>Little Flower Junior College</strong> | Paper Processing System</p>
+    <p style='margin: 0.5rem 0 0 0; font-size: 0.9rem;'>Uppal, Hyderabad - 39 | Academic Year 2023-24</p>
+    <p style='margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;'>Professional Document Processing Solution</p>
 </div>
 """, unsafe_allow_html=True)
+
+# JavaScript for sidebar toggle
+st.components.v1.html("""
+<script>
+    // Listen for messages to toggle sidebar
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'streamlit:setComponentValue' && event.data.value === 'toggle-sidebar') {
+            // This will trigger a rerun when sidebar needs to be shown
+            window.location.reload();
+        }
+    });
+</script>
+""", height=0)
