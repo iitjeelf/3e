@@ -783,7 +783,7 @@ else:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666; padding: 1.5rem; font-size: 0.9rem;'>
-    © Copyright 2024 Little Flower Junior College (LFJC). All rights reserved.
+    ©  All Rights Reserved, LFJC 2026 .
 </div>
 """, unsafe_allow_html=True)
 
