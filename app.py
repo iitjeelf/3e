@@ -346,7 +346,7 @@ def create_pdf(files):
                 img = enhance_image_opencv(img)
                 
                 # Scale with 70% factor
-                scale = ((A4_WIDTH - LEFT_MARGIN - RIGHT_MARGIN - 20) * 0.7) / img.width
+                scale = ((A4_WIDTH - LEFT_MARGIN - RIGHT_MARGIN - 20) * 0.9) / img.width
                 img_scaled = img.resize((int(img.width * scale), int(img.height * scale)), Image.Resampling.LANCZOS)
                 img_to_process = img_scaled
                 is_first_part = True
